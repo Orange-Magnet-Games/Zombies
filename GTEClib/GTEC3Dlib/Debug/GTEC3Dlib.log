@@ -1,0 +1,26 @@
+﻿  Floor.cpp
+C:\Users\Andreas\Documents\GTEC2022\GTEClib\source\Floor.cpp(109,11): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\Andreas\Documents\GTEC2022\GTEClib\source\Floor.cpp(110,11): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\Andreas\Documents\GTEC2022\GTEClib\source\Floor.cpp(120,12): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Andreas\Documents\GTEC2022\GTEClib\source\Floor.cpp(123,13): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+  Font.cpp
+C:\Users\Andreas\Documents\GTEC2022\GTEClib\source\Font.cpp(150,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  Game.cpp
+  GameApp.cpp
+  Graphics.cpp
+  MD2model.cpp
+  MD3model.cpp
+  Model.cpp
+  SoundPlayer.cpp
+  Sprite.cpp
+  Terrain.cpp
+  Texture.cpp
+C:\Users\Andreas\Documents\GTEC2022\GTEClib\source\Texture.cpp(158,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\Andreas\Documents\GTEC2022\GTEClib\source\Texture.cpp(295,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  Vector3.cpp
+  Generating Code...
+glu32.lib(GLU32.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in opengl32.lib(OPENGL32.dll); second definition ignored
+SDL.lib(SDL.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in opengl32.lib(OPENGL32.dll); second definition ignored
+SDL_mixer.lib(SDL_mixer.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in opengl32.lib(OPENGL32.dll); second definition ignored
+SDL_image.lib(SDL_image.dll) : warning LNK4006: __NULL_IMPORT_DESCRIPTOR already defined in opengl32.lib(OPENGL32.dll); second definition ignored
+  GTEC3Dlib.vcxproj -> C:\Users\Andreas\Documents\GTEC2022\GTEClib\lib\GTEC3Dlib.lib
