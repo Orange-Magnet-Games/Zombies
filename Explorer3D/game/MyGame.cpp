@@ -11,8 +11,20 @@ CMyGame::~CMyGame(void) {}
 void CMyGame::OnInitialize()
 {
 	
+	// ogro model
+	zombo.LoadModel("Ogro/Ogro.md2");
+	zombo.SetScale(3.5f);
+	zombo.SetToFloor(0);
 
+	// coin model
+	coin.LoadModel("coin/coin.obj");
+	coin.SetY(50);
+	coin.SetScale(10.0f);
 
+	// wall model
+	wall.LoadModel("wal/wall2.obj");
+	wall.SetScale(4.0f);
+	wall.SetToFloor(0);
 
 	// Loading graphics and sound assets
 	cout << "Loading assets" << endl;
@@ -46,11 +58,15 @@ void CMyGame::OnInitialize()
 	// load abarlith model
 	player.LoadModel("Abarlith/Abarlith.md2"); 
 	player.SetScale( 3.5f);
-	
+
+	wall.LoadModel("wal/wall2.obj");
+	wall.SetScale(12.f);
+
 	
 	// load floor texture
 	floor.LoadTexture("grass.bmp");
 	floor.SetTiling(true);
+	floor.SetSize(10000, 10000);
 	
 	
 	// player health bar
@@ -113,10 +129,11 @@ CVector CMyGame::RotateInZ(CVector in, float a) {
 }
 void CMyGame::OnStartLevel(int level)
 {
-	// set size of the game world
-	floor.SetSize(6000,6000);
-  
-	player.SetPosition(100,100,100); player.SetStatus(0);
+    
+	LoadLevelData("level.txt");
+
+	player.SetPosition(0, 100, 0);
+	player.SetStatus(0);
 	player.SetHealth(100);
   
   
@@ -149,6 +166,8 @@ void CMyGame::PlayerControl(long t)
 	}
 	else player.SetSpeed(0);
 
+	for (CModel* i : *walls) i->Update(t);
+
 
 
 	CVector dir = CVector(0, 0, 0);
@@ -157,6 +176,30 @@ void CMyGame::PlayerControl(long t)
 	if (IsKeyDown(SDLK_a)) dir.z -= 1;
 	if (IsKeyDown(SDLK_d)) dir.z += 1;
 
+	bool move = true; // we assume that we cannot move
+
+	CLine ray;
+
+	for (CModel* pWall : *walls)
+	{
+		ray.SetPositionV(camera.position, camera.position + RotateDirection(player.GetDirectionV() * 3, CVector(0, 0, 0)));
+		if (IsKeyDown(SDLK_w) && player.HitTestFront(pWall)) move = false;
+
+		ray.SetPositionV(camera.position, camera.position + RotateDirection(player.GetDirectionV() * 3, CVector(0, 180, 0)));
+		if (IsKeyDown(SDLK_s) && player.HitTestBack(pWall)) move = false;
+
+		ray.SetPositionV(camera.position, camera.position + RotateDirection(player.GetDirectionV() * 3, CVector(0, 270, 0)));
+		if (IsKeyDown(SDLK_a) && player.HitTestLeft(pWall)) move = false;
+
+		ray.SetPositionV(camera.position, camera.position + RotateDirection(player.GetDirectionV() * 3, CVector(0, 90, 0)));
+		if (IsKeyDown(SDLK_d) && player.HitTestRight(pWall)) move = false;
+	}
+
+	if (move && (IsKeyDown(SDLK_w) || IsKeyDown(SDLK_s) || IsKeyDown(SDLK_a) || IsKeyDown(SDLK_d)))
+	{
+		player.SetSpeed(500);
+	}
+	else player.SetSpeed(0);
 
 	CVector point = player.GetPositionV() + RotateInY(dir, DEG2RAD(camera.rotation.y + 90));
 
@@ -242,6 +285,88 @@ void CMyGame::CameraControl(CGraphics* g)
 	Light.Apply();
 }
 
+void CMyGame::ZomboControl()
+{
+	for (CModel* zombo : *zombos) {
+		if (zombo->IsAutoMoving()) zombo->PlayAnimation(40, 45, 7, true);
+		else zombo->PlayAnimation(1, 39, 7, true);
+
+		// select a new waypoint if stopped unless we reached the last waypoint
+		if (!zombo->IsAutoMoving() && zombo->GetStatus() < path.size())
+		{
+			// The status member variable is used to indicate which waypoint we aim for
+			CVector v = path[zombo->GetStatus()];
+			zombo->SetStatus(zombo->GetStatus() + 1);
+			zombo->MoveTo(v.x, v.z, 100);
+		}
+		// we reached the last way point, re-position at the first waypoint
+		if (!zombo->IsAutoMoving() && zombo->GetStatus() == path.size())
+		{
+			zombo->SetStatus(0);
+			zombo->SetPositionV(path[0]);
+		}
+	}
+}
+
+void CMyGame::LoadLevelData(string filename)
+{
+	//what - vlad
+	// declaring new file
+	fstream myfile;
+	// opening file for reading
+	myfile.open(filename, ios_base::in);
+
+	int type, x, y, z, rot;
+	string text;
+	// reading while the end of file has not been reached
+	bool neof; // not end of file
+	do
+	{
+		myfile >> type >> x >> y >> z >> rot;
+
+		x -= 400;
+		z -= 400;
+
+		x *= 3;
+		y *= 3;
+		z *= 3;
+
+		neof = myfile.good();
+		//cout << type << " " << x << " " << y << " " << z << " " << rot << endl;
+		if (neof) // if not end of file
+		{
+			switch (type) {
+				case 1: //  Wall -> Wall 2.0 --- There was no change, I just made it sound fancier
+				{
+					CModel* wallInstance = wall.Clone(); // clone wall segment
+					wallInstance->SetPosition((float)x, (float)y, (float)z);
+					wallInstance->SetRotation(float(rot));
+					wallInstance->SetToFloor(0);
+					walls->push_back(wallInstance);
+					break;
+				}
+  			    case 2: // Coin -> Waypoints 
+				{
+					path.push_back(CVector((float)x, (float)y, (float)z));
+					break;
+				}
+				case 3: // Ogro -> Spawner
+				{
+					CModel* enemyInstance = zomboSpawner.Clone();
+					enemyInstance->SetPosition((float)x, (float)y, (float)z); enemyInstance->SetToFloor(0);
+					enemyInstance->SetRotation(float(rot)); enemyInstance->SetDirection((float)rot);
+					enemyInstance->SetSpeed(100);
+					zomboSpawners->push_back(enemyInstance);
+					break;
+				}
+
+			}
+
+		}
+	} while (neof);
+	myfile.close();
+
+}
 
 // ----------------   Draw 3D world -------------------------
 void CMyGame::OnRender3D(CGraphics* g)
@@ -255,6 +380,8 @@ void CMyGame::OnRender3D(CGraphics* g)
 	//player.Draw(g);
 	leftGun->Draw(g);
 	rightGun->Draw(g);
+
+	for (CModel* i : *walls) i->Draw(g);
 	
 	
 	//ShowBoundingBoxes();

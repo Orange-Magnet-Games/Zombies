@@ -38,6 +38,7 @@ public:
 	CVector gunOffset = CVector(0,0,0);
 	virtual void Update(float t) = 0;
 	virtual void Draw(CGraphics* g) = 0;
+	virtual void Shoot() = 0;
 };
 
 class BlunderBuss : public virtual Gun {
@@ -48,8 +49,10 @@ class BlunderBuss : public virtual Gun {
 	void Draw(CGraphics* g) {
 		model.Draw(g);
 	}
+	void Shoot() {}
 
 };
+
 class CMyGame : public CGame
 {
 public:
@@ -60,11 +63,23 @@ public:
 	Camera camera = Camera();
 	// Variables
 	int score;
-	vector<Gun*> guns;
-	Gun *leftGun, *rightGun;
+	
 
 	// Models and Model Lists
 	CModelMd2 player;   // animated player model
+
+	vector<Gun*> guns;
+	Gun* leftGun, * rightGun;
+
+	CModel wall;
+	CModel zombo;
+	CModelList* zombos = new CModelList();
+	CModel zomboSpawner;
+	CModel coin;
+	CModel box;
+	CModelList* zomboSpawners = new CModelList();;
+	CModelList* walls = new CModelList();;
+	vector<CVector> path;
 	
 	float maxHealth = 100;
 
@@ -88,8 +103,11 @@ public:
 	CVector RotateInY(CVector in, float a);
 	CVector RotateInZ(CVector in, float a);
    
+	void LoadLevelData(string filename);
 
 	void PlayerControl(long t);
+
+	void ZomboControl();
    
 	void CameraControl(CGraphics* g);
 
