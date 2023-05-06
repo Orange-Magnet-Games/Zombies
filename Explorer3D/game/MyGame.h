@@ -2,33 +2,73 @@
 
 
 #include "Game.h"
+class Camera {
+public:
+	CVector position;
+	CVector rotation;
+	CVector scale;
 
+	Camera(CVector position, CVector rotation, CVector scale) :
+		position(position),
+		rotation(rotation),
+		scale(scale)
+	{}
+	Camera(CVector position, CVector rotation) :
+		position(position),
+		rotation(rotation),
+		scale(CVector(1, 1, 1))
+	{}
+	Camera(CVector position) :
+		position(position),
+		rotation(CVector(0, 0, 0)),
+		scale(CVector(1, 1, 1))
+	{}
+	Camera() :
+		position(CVector(0, 0, 0)),
+		rotation(CVector(0, 0, 0)),
+		scale(CVector(1, 1, 1))
+	{}
+};
 
+class Gun {
+public:
+	CModelMd2 model;
+	float fireRate = 1, bulletSpeed = 1;
+	CModelMd2 bullet;
+	CVector gunOffset = CVector(0,0,0);
+	virtual void Update(float t) = 0;
+	virtual void Draw(CGraphics* g) = 0;
+};
+
+class BlunderBuss : public virtual Gun {
+
+	void Update(float t) {
+		model.Update(t);
+	}
+	void Draw(CGraphics* g) {
+		model.Draw(g);
+	}
+
+};
 class CMyGame : public CGame
 {
 public:
 	CMyGame();
 	~CMyGame();
 
-    // ----  Declare your game variables and objects here -------------
-
+	// ----  Declare your game variables and objects here -------------
+	Camera camera = Camera();
 	// Variables
 	int score;
+	vector<Gun*> guns;
+	Gun *leftGun, *rightGun;
 
+	// Models and Model Lists
+	CModelMd2 player;   // animated player model
+	
+	float maxHealth = 100;
 
-    // Models and Model Lists
-    CModelMd2 player;   // animated player model
-    CModel box;		// another box (obj model)
-	
-	// todo: Declare more models
-	
-	
-	
-	
-	// slash screen
-	CSprite screen;
-	
-
+	float sensitivity = 0.25;
 	// game world floor
 	CFloor floor;
 	
@@ -38,13 +78,22 @@ public:
 	// Font
 	CFont font;
 
-   // -----   Add you member functions here ------
-   
-   void PlayerControl();
-   
-   void CameraControl(CGraphics* g);
+	// -----   Add you member functions here ------
 
-   // ---------------------Event Handling --------------------------
+	void KeepInRange(float& in, float min, float max);
+
+	CVector RotateDirection(CVector in, CVector rotation); // IN RADIANS 
+	CVector RotateDirection(CVector in, float x, float y, float z); // IN RADIANS 
+	CVector RotateInX(CVector in, float a);
+	CVector RotateInY(CVector in, float a);
+	CVector RotateInZ(CVector in, float a);
+   
+
+	void PlayerControl(long t);
+   
+	void CameraControl(CGraphics* g);
+
+	// ---------------------Event Handling --------------------------
 
 	// Game Loop Funtions
 	virtual void OnUpdate();
