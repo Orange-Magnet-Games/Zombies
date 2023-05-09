@@ -6,11 +6,12 @@ CMyGame::CMyGame(void) { score = 0; }
 
 CMyGame::~CMyGame(void) {}
 
+#define RESTITUTION 0
 
 // --------  game initialisation --------
 void CMyGame::OnInitialize()
 {
-	
+	srand(time(0));
 	// ogro model
 	zombo.LoadModel("Ogro/Ogro.md2");
 	zombo.SetScale(3.5f);
@@ -42,17 +43,9 @@ void CMyGame::OnInitialize()
 	Light.Enable();
 
 	// constructor this later
-	leftGun = new BlunderBuss();
-	leftGun->model.LoadModel("Guns/blunger.md2");
-	leftGun->model.LoadTexture("Guns/blunger.png");
-	leftGun->model.SetScale(3.5f);
-	leftGun->gunOffset = CVector(0, -10, -10);
+	leftGun = new BlunderBuss(CVector(-5, -10, -15));
 
-	rightGun = new BlunderBuss();
-	rightGun->model.LoadModel("Guns/blunger.md2");
-	rightGun->model.LoadTexture("Guns/blunger.png");
-	rightGun->model.SetScale(3.5f);
-	rightGun->gunOffset = CVector(0, -10, 10);
+	rightGun = new BlunderBuss(CVector(-5, -10, 15));
 
 
 	// load abarlith model
@@ -76,17 +69,24 @@ void CMyGame::OnInitialize()
 	StartGame();
 }
 
+
+void CMyGame::OnStartLevel(int level)
+{
+    
+	LoadLevelData("level.txt");
+
+	player.SetPosition(0, 100, 0);
+	player.SetStatus(0);
+	player.SetHealth(100);
+  
+  
+	score=0; 
+  
+	
+}
 void CMyGame::KeepInRange(float& in, float min, float max) {
 	if (in > max) in = max;
 	if (in < min) in = min;
-}
-CVector CMyGame::RotateDirection(CVector in, CVector rotation) { // IN RADIANS 
-	rotation = CVector(DEG2RAD(rotation.x), DEG2RAD(rotation.y), DEG2RAD(rotation.z));
-	return RotateDirection(in, rotation.x, rotation.y, rotation.z);
-}
-CVector CMyGame::RotateDirection(CVector in, float x, float y, float z) { // IN RADIANS 
-	return RotateInX(RotateInY(RotateInZ(in, z), y), x);
-	//until I figure out how to make one big matrix out of these this'll have to be it
 }
 CVector CMyGame::RotateInX(CVector in, float a) {
 	return CVector(
@@ -127,23 +127,23 @@ CVector CMyGame::RotateInZ(CVector in, float a) {
 		in.z
 	);
 }
-void CMyGame::OnStartLevel(int level)
-{
-    
-	LoadLevelData("level.txt");
+CVector CMyGame::RotateDirection(CVector in, float x, float y, float z) { // IN RADIANS 
+	return RotateInX(RotateInY(RotateInZ(in, z), y), x);
+	//until I figure out how to make one big matrix out of these this'll have to be it
+} // IN RADIANS 
 
-	player.SetPosition(0, 100, 0);
-	player.SetStatus(0);
-	player.SetHealth(100);
-  
-  
-	score=0; 
-  
-	
+CVector CMyGame::RotateDirection(CVector in, CVector rotation) { // IN RADIANS 
+	rotation = CVector(DEG2RAD(rotation.x), DEG2RAD(rotation.y), DEG2RAD(rotation.z));
+	return RotateDirection(in, rotation.x, rotation.y, rotation.z);
+} // IN RADIANS 
+
+// Esssential Functions
+
+bool CMyGame::IsInRange(CVector min, CVector max, CVector orig) {
+	return (orig.x > min.x && orig.x < max.x) &&
+		(orig.y > min.y && orig.y < max.y) &&
+		(orig.z > min.z && orig.z < max.z);
 }
-
-// Game Logic in the OnUpdate function called every frame @ 30 fps
-
 void CMyGame::OnUpdate() 
 {
 	if (IsMenuMode() || IsGameOver()) return;
@@ -154,50 +154,56 @@ void CMyGame::OnUpdate()
 	if (IsKeyDown(SDLK_LALT) && IsKeyDown(SDLK_F4)) ExitGame();
 	
 	PlayerControl(t);
+
+	for (CModel* i : *walls) i->Update(t);
 	
+	for (CModel* bullet : *bullets) { 
+		if (IsInRange(CVector(-6000, -20, -6000), CVector(6000, 1000, 6000), bullet->GetPositionV())) bullet->Delete();
+		for (CModel* wall : *walls) if(bullet->HitTest(wall)) bullets->delete_if(deleted);
+		
+		bullet->Update(t); 
+	}
+
+	if(leftGun->fireTimer > 0) leftGun->fireTimer--;
+	if (rightGun->fireTimer > 0) rightGun->fireTimer--;
+
+	if (leftGun->automatic && leftGun->fireTimer <= 0) leftGun->Shoot();
+	if (rightGun->automatic && rightGun->fireTimer <= 0) rightGun->Shoot();
+
+	leftGun->model.SetRotation(camera.rotation.z, camera.rotation.y + 90, camera.rotation.x + leftGun->fireTimer);
+	leftGun->model.SetPositionV(camera.position + RotateDirection(leftGun->gunOffset, CVector(camera.rotation.z, -camera.rotation.y + 90, -camera.rotation.x)));
+
+	rightGun->model.SetRotation(camera.rotation.z, camera.rotation.y + 90, camera.rotation.x + rightGun->fireTimer);
+	rightGun->model.SetPositionV(camera.position + RotateDirection(rightGun->gunOffset, CVector(camera.rotation.z, -camera.rotation.y + 90, -camera.rotation.x)));
+
+	leftGun->Update(t);
+	rightGun->Update(t);
 }
 
 void CMyGame::PlayerControl(long t)
 {
-	if (IsKeyDown(SDLK_w) || IsKeyDown(SDLK_a) || IsKeyDown(SDLK_s) || IsKeyDown(SDLK_d))
-	{
-		if (IsKeyDown(SDLK_LSHIFT)) player.SetSpeed(1000);
-		else player.SetSpeed(500);
-	}
-	else player.SetSpeed(0);
-
-	for (CModel* i : *walls) i->Update(t);
-
-
-
 	CVector dir = CVector(0, 0, 0);
 	if (IsKeyDown(SDLK_w)) dir.x += 1;
 	if (IsKeyDown(SDLK_s)) dir.x -= 1;
 	if (IsKeyDown(SDLK_a)) dir.z -= 1;
 	if (IsKeyDown(SDLK_d)) dir.z += 1;
+	
+	bool move = true;
 
-	bool move = true; // we assume that we cannot move
-
-	CLine ray;
-
-	for (CModel* pWall : *walls)
+	for (CModel* wall : *walls)
 	{
-		ray.SetPositionV(camera.position, camera.position + RotateDirection(player.GetDirectionV() * 3, CVector(0, 0, 0)));
-		if (IsKeyDown(SDLK_w) && player.HitTestFront(pWall)) move = false;
+		if (player.HitTest(wall)) {
+			move = false;
+			CVector amogus = player.GetPositionV() + (player.GetPositionV() - wall->GetPositionV()).Normalized();
+			player.SetPosition(amogus.x, amogus.z);
+		}
 
-		ray.SetPositionV(camera.position, camera.position + RotateDirection(player.GetDirectionV() * 3, CVector(0, 180, 0)));
-		if (IsKeyDown(SDLK_s) && player.HitTestBack(pWall)) move = false;
-
-		ray.SetPositionV(camera.position, camera.position + RotateDirection(player.GetDirectionV() * 3, CVector(0, 270, 0)));
-		if (IsKeyDown(SDLK_a) && player.HitTestLeft(pWall)) move = false;
-
-		ray.SetPositionV(camera.position, camera.position + RotateDirection(player.GetDirectionV() * 3, CVector(0, 90, 0)));
-		if (IsKeyDown(SDLK_d) && player.HitTestRight(pWall)) move = false;
 	}
 
-	if (move && (IsKeyDown(SDLK_w) || IsKeyDown(SDLK_s) || IsKeyDown(SDLK_a) || IsKeyDown(SDLK_d)))
+	if (move && (IsKeyDown(SDLK_w) || IsKeyDown(SDLK_a) || IsKeyDown(SDLK_s) || IsKeyDown(SDLK_d)))
 	{
-		player.SetSpeed(500);
+		if (IsKeyDown(SDLK_LSHIFT)) player.SetSpeed(1000);
+		else player.SetSpeed(500);
 	}
 	else player.SetSpeed(0);
 
@@ -213,17 +219,9 @@ void CMyGame::PlayerControl(long t)
 
 	player.Update(t);
 
+	
 	camera.position = player.GetPositionV() + CVector(0, 60, 0);
 
-	
-	leftGun->model.SetRotation(camera.rotation.z, camera.rotation.y + 90, camera.rotation.x);
-	leftGun->model.SetPositionV(camera.position + RotateDirection(leftGun->gunOffset, CVector(camera.rotation.z, -camera.rotation.y + 90, -camera.rotation.x)));
-
-	rightGun->model.SetRotation(camera.rotation.z, camera.rotation.y + 90, camera.rotation.x);
-	rightGun->model.SetPositionV(camera.position + RotateDirection(rightGun->gunOffset, CVector(camera.rotation.z, -camera.rotation.y + 90, -camera.rotation.x)));
-
-	leftGun->Update(t);
-	rightGun->Update(t);
 
 
     if (player.GetHealth() <= 0) GameOver();
@@ -310,16 +308,12 @@ void CMyGame::ZomboControl()
 
 void CMyGame::LoadLevelData(string filename)
 {
-	//what - vlad
-	// declaring new file
+	// Made to Be Compatible with GTEC Level Editor
 	fstream myfile;
-	// opening file for reading
 	myfile.open(filename, ios_base::in);
-
 	int type, x, y, z, rot;
 	string text;
-	// reading while the end of file has not been reached
-	bool neof; // not end of file
+	bool neof;
 	do
 	{
 		myfile >> type >> x >> y >> z >> rot;
@@ -333,7 +327,7 @@ void CMyGame::LoadLevelData(string filename)
 
 		neof = myfile.good();
 		//cout << type << " " << x << " " << y << " " << z << " " << rot << endl;
-		if (neof) // if not end of file
+		if (neof) 
 		{
 			switch (type) {
 				case 1: //  Wall -> Wall 2.0 --- There was no change, I just made it sound fancier
@@ -444,18 +438,50 @@ void CMyGame::OnMouseMove(Uint16 x,Uint16 y,Sint16 relx,Sint16 rely,bool bLeft,b
 
 void CMyGame::OnLButtonDown(Uint16 x,Uint16 y)
 {    
+	if (leftGun->fireTimer <= 0) {
+		if (leftGun->automatic) {
+			leftGun->fireTimer = leftGun->fireRate;
+			for (CModel* bullet : leftGun->Shoot()) {
+				bullets->push_back(bullet);
+			}
+		}
+		else if(!leftGun->held) {
+			leftGun->fireTimer = leftGun->fireRate;
+			for (CModel* bullet : leftGun->Shoot()) {
+				bullets->push_back(bullet);
+			}
+		}
+		leftGun->held = true;
+	}
 }
 
 void CMyGame::OnLButtonUp(Uint16 x,Uint16 y)
 {
+	leftGun->held = false;
 }
 
 void CMyGame::OnRButtonDown(Uint16 x,Uint16 y)
 {
+	if (rightGun->fireTimer <= 0) {
+		if (rightGun->automatic) {
+			rightGun->fireTimer = rightGun->fireRate;
+			for (CModel* bullet : rightGun->Shoot()) {
+				bullets->push_back(bullet);
+			}
+		}
+		else if (!rightGun->held) {
+			rightGun->fireTimer = rightGun->fireRate;
+			for (CModel* bullet : rightGun->Shoot()) {
+				bullets->push_back(bullet);
+			}
+		}
+		rightGun->held = true;
+	}
 }
 
 void CMyGame::OnRButtonUp(Uint16 x,Uint16 y)
 {
+	rightGun->held = false;
 }
 
 void CMyGame::OnMButtonDown(Uint16 x,Uint16 y)
