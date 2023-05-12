@@ -2,30 +2,36 @@
 
 using namespace std;
 
+CMyGame* CMyGame::instance = nullptr;
+
 CMyGame::CMyGame(void) { score = 0; }
 
 CMyGame::~CMyGame(void) {}
-
-#define RESTITUTION 0
 
 // --------  game initialisation --------
 void CMyGame::OnInitialize()
 {
 	srand(time(0));
 	// ogro model
-	zombo.LoadModel("Ogro/Ogro.md2");
-	zombo.SetScale(3.5f);
+	zombo.LoadModel("Enemies/placeholder.obj");
+	zombo.SetScale(40.0f);
+	zombo.SetHealth(100);
 	zombo.SetToFloor(0);
 
 	// coin model
 	coin.LoadModel("coin/coin.obj");
 	coin.SetY(50);
-	coin.SetScale(10.0f);
+	coin.SetScale(10.f);
 
 	// wall model
 	wall.LoadModel("wal/wall2.obj");
-	wall.SetScale(4.0f);
-	wall.SetToFloor(0);
+	wall.SetScale(4.f);
+	wall.SetToFloor(0); 
+
+	grass.LoadModel("grass/grasse.obj");
+	grass.LoadTexture("grass/grasse.png");
+	grass.SetScale(.5f);
+	grass.SetToFloor(0);
 
 	// Loading graphics and sound assets
 	cout << "Loading assets" << endl;
@@ -42,7 +48,6 @@ void CMyGame::OnInitialize()
 	// enable lighting
 	Light.Enable();
 
-	// constructor this later
 	leftGun = new BlunderBuss(CVector(-5, -10, -15));
 
 	rightGun = new BlunderBuss(CVector(-5, -10, 15));
@@ -137,6 +142,57 @@ CVector CMyGame::RotateDirection(CVector in, CVector rotation) { // IN RADIANS
 	return RotateDirection(in, rotation.x, rotation.y, rotation.z);
 } // IN RADIANS 
 
+BlunderBuss::BlunderBuss(CVector offset) : BlunderBuss() {
+	this->gunOffset = offset;
+}
+
+BlunderBuss::BlunderBuss() {
+	fireTimer = 0;
+	fireRate = 60;
+	bulletSpeed = 2000;
+	automatic = false;
+	held = false;
+	bulletCount = 5;
+	bulletSpread = 30;
+	model.LoadModel("Guns/blunger.md2");
+	model.LoadTexture("Guns/blunger.png");
+	model.SetScale(3.5f);
+
+	bullet.LoadModel("Guns/Bullets/smocke.obj");
+	bullet.LoadTexture("Guns/Bullets/smocke.png");
+	bullet.SetScale(25.f);
+	gunOffset = CVector(0, 0, 0);
+}
+
+void BlunderBuss::Update(float t) {
+	model.SetRotation(CMyGame::Game()->camera.rotation.z, CMyGame::Game()->camera.rotation.y + 90, CMyGame::Game()->camera.rotation.x + fireTimer);
+	model.SetPositionV(CMyGame::Game()->camera.position + CMyGame::RotateDirection(gunOffset, CVector(CMyGame::Game()->camera.rotation.z, -CMyGame::Game()->camera.rotation.y + 90, -CMyGame::Game()->camera.rotation.x)));
+	model.Update(t);
+}
+
+void BlunderBuss::Draw(CGraphics* g) {
+	model.Draw(g);
+}
+
+vector<CModel*> BlunderBuss::Shoot() {
+	vector<CModel*> bullets = vector<CModel*>();
+	for (int i = 0; i < bulletCount; i++) {
+		CModel* bullet = this->bullet.Clone();
+		CVector bruh = model.GetRotationV();
+		bullet->SetPositionV(model.GetPositionV());
+		float x = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		float y = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		float z = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		bruh += CVector(x, y, z);
+		cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
+		bullet->SetDirectionV(bruh);
+		bullet->SetSpeed(bulletSpeed);
+		bullet->SetOmega(x * 500, y * 500, z * 500);
+		bullets.push_back(bullet);
+
+	}
+	return bullets;
+}
 // Esssential Functions
 
 bool CMyGame::IsInRange(CVector min, CVector max, CVector orig) {
@@ -156,10 +212,16 @@ void CMyGame::OnUpdate()
 	PlayerControl(t);
 
 	for (CModel* i : *walls) i->Update(t);
+	for (CModel* i : *grasses) {
+		i->SetRotationToPoint(player.GetPositionV().x, player.GetPositionV().z);
+		i->SetRotation(i->GetRotation() + 90);
+		i->Update(t);
+	}
 	
-	for (CModel* bullet : *bullets) { 
-		if (IsInRange(CVector(-6000, -20, -6000), CVector(6000, 1000, 6000), bullet->GetPositionV())) bullet->Delete();
-		for (CModel* wall : *walls) if(bullet->HitTest(wall)) bullets->delete_if(deleted);
+	bullets->delete_if(deleted);
+	for (CModel* bullet : *bullets) {
+		//if (IsInRange(CVector(-6000, -20, -6000), CVector(6000, 1000, 6000), bullet->GetPositionV())) bullet->Delete();
+		for (CModel* wall : *walls) if(bullet->HitTest(wall)) bullet->Delete();
 		
 		bullet->Update(t); 
 	}
@@ -170,14 +232,23 @@ void CMyGame::OnUpdate()
 	if (leftGun->automatic && leftGun->fireTimer <= 0) leftGun->Shoot();
 	if (rightGun->automatic && rightGun->fireTimer <= 0) rightGun->Shoot();
 
-	leftGun->model.SetRotation(camera.rotation.z, camera.rotation.y + 90, camera.rotation.x + leftGun->fireTimer);
-	leftGun->model.SetPositionV(camera.position + RotateDirection(leftGun->gunOffset, CVector(camera.rotation.z, -camera.rotation.y + 90, -camera.rotation.x)));
-
-	rightGun->model.SetRotation(camera.rotation.z, camera.rotation.y + 90, camera.rotation.x + rightGun->fireTimer);
-	rightGun->model.SetPositionV(camera.position + RotateDirection(rightGun->gunOffset, CVector(camera.rotation.z, -camera.rotation.y + 90, -camera.rotation.x)));
 
 	leftGun->Update(t);
 	rightGun->Update(t);
+
+	zombos->delete_if(deleted);
+	for (CModel* zombo : *zombos) {
+		for (CModel* bullet : *bullets){
+			if (bullet->HitTest(zombo)) {
+				zombo->SetHealth(zombo->GetHealth() - 25);
+				if (zombo->GetHealth() <= 0) zombo->Delete();
+				bullet->Delete();
+
+				cout << "HITTTTTTTTTTTT" << endl;
+			}
+		}
+		zombo->Update(t);
+	}
 }
 
 void CMyGame::PlayerControl(long t)
@@ -241,14 +312,23 @@ void CMyGame::OnDraw(CGraphics* g)
 	// drawing the healthbar (which is a sprite object drawn in 2D)
 	CVector pos=WorldToScreenCoordinate(player.GetPositionV());
 	
-	
+	for (auto zombar : zombars) delete zombar;
+	zombars.clear();
+
+	for (CModel* zombo : *zombos) {
+		CHealthBar* zombar = new CHealthBar();
+		//zombar->SetHealth(zombo->GetHealth());
+		zombar->SetSize(zombo->GetHealth() * 2, 10);
+		CVector pos = WorldToScreenCoordinate(zombo->GetPositionV() + CVector(0, 200, 0));
+		zombar->SetPosition(pos.x, pos.y);
+		zombar->Draw(g);
+		zombars.push_back(zombar);
+	}
 
 	hbar.SetHealth(player.GetHealth());
 	hbar.SetSize(maxHealth * 2, 10);
 	hbar.SetPosition(maxHealth + 10, 690);
 	hbar.Draw(g);
-	
-	
 	
 	// draw GAME OVER if game over
    	if (IsGameOver())
@@ -314,6 +394,8 @@ void CMyGame::LoadLevelData(string filename)
 	int type, x, y, z, rot;
 	string text;
 	bool neof;
+
+
 	do
 	{
 		myfile >> type >> x >> y >> z >> rot;
@@ -376,10 +458,13 @@ void CMyGame::OnRender3D(CGraphics* g)
 	rightGun->Draw(g);
 
 	for (CModel* i : *walls) i->Draw(g);
+	for (CModel* i : *grasses) i->Draw(g);
+	for (CModel* i : *zombos) i->Draw(g);
+	for (CModel* i : *bullets) i->Draw(g);
 	
 	
 	//ShowBoundingBoxes();
-	ShowCoordinateSystem();
+	//ShowCoordinateSystem();
 }
 
 
@@ -396,7 +481,14 @@ void CMyGame::OnDisplayMenu()
 void CMyGame::OnStartGame()
 {
      OnStartLevel(1);	
-   
+	 for (int i = 0; i < 1500; i++) {
+		 grasses->push_back(grass.Clone());
+		 grasses->back()->SetPosition(rand() % 8000 - 3000, rand() % 8000 - 3000);
+	 }
+
+	 auto p = zombo.Clone();
+	 p->SetPosition(player.GetX() + 50, player.GetZ());
+	 zombos->push_back(p);
 }
 
 

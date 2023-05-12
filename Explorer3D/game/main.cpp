@@ -7,10 +7,9 @@
 int main(int argc, char* argv[])
 {
 	CGameApp app;
-	CMyGame game;
 	
 	app.OpenWindow(900, 700, "Explorer3D");
 
-	app.Run(&game);
+	app.Run(CMyGame::Game());
 	return(0);
 }

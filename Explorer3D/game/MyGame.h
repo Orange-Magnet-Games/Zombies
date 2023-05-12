@@ -3,7 +3,30 @@
 
 #include "Game.h"
 
+class Gun {
+public:
+	CModelMd2 model;
+	float fireTimer, fireRate, bulletSpeed;
+	bool automatic, held;
+	int bulletCount;
+	float bulletSpread;
+	CModel bullet;
+	CVector gunOffset;
+	virtual void Update(float t) = 0;
+	virtual void Draw(CGraphics* g) = 0;
+	virtual vector<CModel*> Shoot() = 0;
+};
 
+class BlunderBuss : public virtual Gun {
+public:
+	BlunderBuss(CVector offset);
+	BlunderBuss();
+
+	void Update(float t);
+	
+	void Draw(CGraphics* g);
+	vector<CModel*> Shoot();
+};
 
 class Camera {
 public:
@@ -36,6 +59,8 @@ public:
 
 class CMyGame : public CGame
 {
+private:
+	static CMyGame* instance;
 public:
 	CMyGame();
 	~CMyGame();
@@ -44,13 +69,18 @@ public:
 	Camera camera = Camera();
 	// Variables
 	int score;
-	
+	static CMyGame* Game() {
+		if (instance == nullptr) instance = new CMyGame();
+		return instance;
+	}
 
 	// Models and Model Lists
 	CModelMd2 player;   // animated player model
 
 	CModel wall;
 	CModel zombo;
+	CModel grass;
+	CModelList* grasses = new CModelList();
 	CModelList* zombos = new CModelList();
 	CModelList* bullets = new CModelList();
 	CModel zomboSpawner;
@@ -68,6 +98,7 @@ public:
 	
 	// health indicator
 	CHealthBar hbar;
+	vector<CHealthBar*> zombars;
 	
 	// Font
 	CFont font;
@@ -82,71 +113,7 @@ public:
 
 	static CVector RotateDirection(CVector in, CVector rotation);
 
-	class Gun {
-	public:
-		CModelMd2 model;
-		float fireTimer, fireRate, bulletSpeed;
-		bool automatic, held;
-		int bulletCount;
-		int bulletSpread;
-		CModelMd2 bullet;
-		CVector gunOffset;
-		virtual void Update(float t) = 0;
-		virtual void Draw(CGraphics* g) = 0;
-		virtual vector<CModel*> Shoot() = 0;
-	};
-
-	class BlunderBuss : public virtual Gun {
-	public:
-		BlunderBuss(CVector offset) {
-			fireTimer = 0;
-			fireRate = 60;
-			bulletSpeed = 20;
-			automatic = false;
-			held = false;
-			bulletCount = 5;
-			bulletSpread = 60;
-			model.LoadModel("Guns/blunger.md2");
-			model.LoadTexture("Guns/blunger.png");
-			model.SetScale(3.5f);
-			this->gunOffset = offset;
-		}
-		BlunderBuss() {
-			fireTimer = 0;
-			fireRate = 60;
-			bulletSpeed = 20;
-			automatic = false;
-			held = false;
-			bulletCount = 5;
-			bulletSpread = 60;
-			model.LoadModel("Guns/blunger.md2");
-			model.LoadTexture("Guns/blunger.png");
-			model.SetScale(3.5f);
-			gunOffset = CVector(0, 0, 0);
-
-		}
-
-		void Update(float t) {
-			model.Update(t);
-		}
-		void Draw(CGraphics* g) {
-			model.Draw(g);
-		}
-		vector<CModel*> Shoot() {
-			vector<CModel*> bullets = vector<CModel*>();
-			for (int i = 0; i < bulletCount; i++) {
-				CModel* bullet = new CModel(this->bullet);
-				CVector bruh = bullet->GetPositionV() + model.GetDirectionV();
-				RotateDirection(bruh, CVector(rand() % bulletSpread - bulletSpread / 2, rand() % bulletSpread - bulletSpread / 2, rand() % bulletSpread - bulletSpread / 2));
-				bullet->SetDirectionV(bruh);
-				bullet->SetSpeed(1000);
-				bullet->SetOmega(rand() % bulletSpread - bulletSpread / 2, rand() % bulletSpread - bulletSpread / 2, rand() % bulletSpread - bulletSpread / 2);
-				bullets.push_back(bullet);
-				
-			}
-			return bullets;
-		}
-	};
+	
 
 	vector<Gun*> guns;
 	Gun* leftGun, * rightGun;
