@@ -142,6 +142,8 @@ CVector CMyGame::RotateDirection(CVector in, CVector rotation) { // IN RADIANS
 	return RotateDirection(in, rotation.x, rotation.y, rotation.z);
 } // IN RADIANS 
 
+// BLUNDER BUSSSYYY '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 BlunderBuss::BlunderBuss(CVector offset) : BlunderBuss() {
 	this->gunOffset = offset;
 }
@@ -193,6 +195,169 @@ vector<CModel*> BlunderBuss::Shoot() {
 	}
 	return bullets;
 }
+
+// RIFLEEEEEEEEEEEEEE '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Rifle::Rifle(CVector offset) : Rifle() {
+	this->gunOffset = offset;
+}
+
+Rifle::Rifle() {
+	fireTimer = 0;
+	fireRate = 10;
+	bulletSpeed = 5000;
+	automatic = false;
+	held = false;
+	bulletCount = 1;
+	bulletSpread = 5;
+	//model.LoadModel("Guns/blunger.md2");
+	//model.LoadTexture("Guns/blunger.png");
+	model.SetScale(3.5f);
+
+	//bullet.LoadModel("Guns/Bullets/smocke.obj");
+	//bullet.LoadTexture("Guns/Bullets/smocke.png");
+	bullet.SetScale(25.f);
+	gunOffset = CVector(0, 0, 0);
+}
+
+void Rifle::Update(float t) {
+	model.SetRotation(CMyGame::Game()->camera.rotation.z, CMyGame::Game()->camera.rotation.y + 90, CMyGame::Game()->camera.rotation.x + fireTimer);
+	model.SetPositionV(CMyGame::Game()->camera.position + CMyGame::RotateDirection(gunOffset, CVector(CMyGame::Game()->camera.rotation.z, -CMyGame::Game()->camera.rotation.y + 90, -CMyGame::Game()->camera.rotation.x)));
+	model.Update(t);
+}
+
+void Rifle::Draw(CGraphics* g) {
+	model.Draw(g);
+}
+
+vector<CModel*> Rifle::Shoot() {
+	vector<CModel*> bullets = vector<CModel*>();
+	for (int i = 0; i < bulletCount; i++) {
+		CModel* bullet = this->bullet.Clone();
+		CVector bruh = model.GetRotationV();
+		bullet->SetPositionV(model.GetPositionV());
+		float x = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		float y = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		float z = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		bruh += CVector(x, y, z);
+		cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
+		bullet->SetDirectionV(bruh);
+		bullet->SetSpeed(bulletSpeed);
+		bullet->SetOmega(x * 500, y * 500, z * 500);
+		bullets.push_back(bullet);
+
+	}
+	return bullets;
+}
+
+// PISTOLIEEEEEEEEEEE ''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Pistol::Pistol(CVector offset) : Pistol() {
+	this->gunOffset = offset;
+}
+
+Pistol::Pistol() {
+	fireTimer = 0;
+	fireRate = 30;
+	bulletSpeed = 5000;
+	automatic = false;
+	held = false;
+	bulletCount = 1;
+	bulletSpread = 2;
+	//model.LoadModel("Guns/blunger.md2");
+	//model.LoadTexture("Guns/blunger.png");
+	model.SetScale(3.5f);
+
+	//bullet.LoadModel("Guns/Bullets/smocke.obj");
+	//bullet.LoadTexture("Guns/Bullets/smocke.png");
+	bullet.SetScale(25.f);
+	gunOffset = CVector(0, 0, 0);
+}
+
+void Pistol::Update(float t) {
+	model.SetRotation(CMyGame::Game()->camera.rotation.z, CMyGame::Game()->camera.rotation.y + 90, CMyGame::Game()->camera.rotation.x + fireTimer);
+	model.SetPositionV(CMyGame::Game()->camera.position + CMyGame::RotateDirection(gunOffset, CVector(CMyGame::Game()->camera.rotation.z, -CMyGame::Game()->camera.rotation.y + 90, -CMyGame::Game()->camera.rotation.x)));
+	model.Update(t);
+}
+
+void Pistol::Draw(CGraphics* g) {
+	model.Draw(g);
+}
+
+vector<CModel*> Pistol::Shoot() {
+	vector<CModel*> bullets = vector<CModel*>();
+	for (int i = 0; i < bulletCount; i++) {
+		CModel* bullet = this->bullet.Clone();
+		CVector bruh = model.GetRotationV();
+		bullet->SetPositionV(model.GetPositionV());
+		float x = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		float y = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		float z = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		bruh += CVector(x, y, z);
+		cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
+		bullet->SetDirectionV(bruh);
+		bullet->SetSpeed(bulletSpeed);
+		bullet->SetOmega(x * 500, y * 500, z * 500);
+		bullets.push_back(bullet);
+
+	}
+	return bullets;
+}
+
+// CROBBOOOOOO '''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Crossbow::Crossbow(CVector offset) : Crossbow() {
+	this->gunOffset = offset;
+}
+
+Crossbow::Crossbow() {
+	fireTimer = 0;
+	fireRate = 60;
+	bulletSpeed = 4000;
+	automatic = false;
+	held = false;
+	bulletCount = 1;
+	bulletSpread = 1;
+	//model.LoadModel("Guns/blunger.md2");
+	//model.LoadTexture("Guns/blunger.png");
+	model.SetScale(3.5f);
+
+	//bullet.LoadModel("Guns/Bullets/smocke.obj");
+	//bullet.LoadTexture("Guns/Bullets/smocke.png");
+	bullet.SetScale(25.f);
+	gunOffset = CVector(0, 0, 0);
+}
+
+void Crossbow::Update(float t) {
+	model.SetRotation(CMyGame::Game()->camera.rotation.z, CMyGame::Game()->camera.rotation.y + 90, CMyGame::Game()->camera.rotation.x + fireTimer);
+	model.SetPositionV(CMyGame::Game()->camera.position + CMyGame::RotateDirection(gunOffset, CVector(CMyGame::Game()->camera.rotation.z, -CMyGame::Game()->camera.rotation.y + 90, -CMyGame::Game()->camera.rotation.x)));
+	model.Update(t);
+}
+
+void Crossbow::Draw(CGraphics* g) {
+	model.Draw(g);
+}
+
+vector<CModel*> Crossbow::Shoot() {
+	vector<CModel*> bullets = vector<CModel*>();
+	for (int i = 0; i < bulletCount; i++) {
+		CModel* bullet = this->bullet.Clone();
+		CVector bruh = model.GetRotationV();
+		bullet->SetPositionV(model.GetPositionV());
+		float x = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		float y = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		float z = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
+		bruh += CVector(x, y, z);
+		cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
+		bullet->SetDirectionV(bruh);
+		bullet->SetSpeed(bulletSpeed);
+		bullet->SetOmega(x * 500, y * 500, z * 500);
+		bullets.push_back(bullet);
+
+	}
+	return bullets;
+}
+
 // Esssential Functions
 
 bool CMyGame::IsInRange(CVector min, CVector max, CVector orig) {

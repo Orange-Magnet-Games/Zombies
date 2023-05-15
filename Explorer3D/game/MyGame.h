@@ -28,6 +28,39 @@ public:
 	vector<CModel*> Shoot();
 };
 
+class Rifle : public virtual Gun {
+public:
+	Rifle(CVector offset);
+	Rifle();
+
+	void Update(float t);
+
+	void Draw(CGraphics* g);
+	vector<CModel*> Shoot();
+};
+
+class Pistol : public virtual Gun {
+public:
+	Pistol(CVector offset);
+	Pistol();
+
+	void Update(float t);
+
+	void Draw(CGraphics* g);
+	vector<CModel*> Shoot();
+};
+
+class Crossbow : public virtual Gun {
+public:
+	Crossbow(CVector offset);
+	Crossbow();
+
+	void Update(float t);
+
+	void Draw(CGraphics* g);
+	vector<CModel*> Shoot();
+};
+
 class Camera {
 public:
 	CVector position;
