@@ -1,36 +1,31 @@
-﻿  main.cpp
-  MyGame.cpp
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(14,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(141,63): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(141,42): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(141,21): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(172,15): warning C4244: 'argument': conversion from 'float' to 'Uint32', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(185,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(186,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(187,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(226,15): warning C4244: 'argument': conversion from 'float' to 'Uint32', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(239,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(240,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(241,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(280,15): warning C4244: 'argument': conversion from 'float' to 'Uint32', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(293,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(294,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(295,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(334,15): warning C4244: 'argument': conversion from 'float' to 'Uint32', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(347,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(348,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(349,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(401,18): warning C4244: 'argument': conversion from 'long' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(402,19): warning C4244: 'argument': conversion from 'long' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(446,57): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(464,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(486,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(538,52): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(651,69): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(651,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(691,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\game\MyGame.cpp(691,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  stdafx.cpp
-  Generating Code...
+﻿  MyGame.cpp
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(14,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(142,63): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(142,42): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(142,21): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(173,15): warning C4244: 'argument': conversion from 'float' to 'Uint32', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(186,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(187,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(188,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(227,15): warning C4244: 'argument': conversion from 'float' to 'Uint32', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(240,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(241,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(242,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(281,15): warning C4244: 'argument': conversion from 'float' to 'Uint32', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(294,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(295,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(296,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(335,15): warning C4244: 'argument': conversion from 'float' to 'Uint32', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(348,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(349,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(350,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(404,18): warning C4244: 'argument': conversion from 'long' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(405,19): warning C4244: 'argument': conversion from 'long' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(456,57): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(474,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(658,69): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(658,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(710,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\Documents\Desktop\proejct\Zombies\Explorer3D\game\MyGame.cpp(710,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 MSVCRTD.lib(initializers.obj) : warning LNK4098: defaultlib 'msvcrt.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
-  game.vcxproj -> C:\Users\Zakeriya\Desktop\GTEC\Zombies\Explorer3D\Debug\GTECgame.exe
+  game.vcxproj -> D:\Documents\Desktop\proejct\Zombies\Explorer3D\Debug\GTECgame.exe

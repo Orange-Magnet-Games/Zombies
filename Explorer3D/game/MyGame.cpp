@@ -13,8 +13,9 @@ void CMyGame::OnInitialize()
 {
 	srand(time(0));
 	// ogro model
-	zombo.LoadModel("Enemies/placeholder.obj");
-	zombo.SetScale(40.0f);
+	zombo.LoadModel("Enemies/Ogro.md2");
+	zombo.LoadTexture("Enemies/Ogro.bmp");
+	zombo.SetScale(5);
 	zombo.SetHealth(100);
 	zombo.SetToFloor(0);
 
@@ -210,13 +211,13 @@ Rifle::Rifle() {
 	held = false;
 	bulletCount = 1;
 	bulletSpread = 5;
-	//model.LoadModel("Guns/blunger.md2");
-	//model.LoadTexture("Guns/blunger.png");
+	model.LoadModel("Guns/rifle.obj");
+	model.LoadTexture("Guns/blunger.png");
 	model.SetScale(3.5f);
 
-	//bullet.LoadModel("Guns/Bullets/smocke.obj");
-	//bullet.LoadTexture("Guns/Bullets/smocke.png");
-	bullet.SetScale(25.f);
+	bullet.LoadModel("Guns/Bullets/Tracer.obj");
+	bullet.LoadTexture("Guns/Bullets/yello.png");
+	bullet.SetScale(2.f);
 	gunOffset = CVector(0, 0, 0);
 }
 
@@ -264,13 +265,13 @@ Pistol::Pistol() {
 	held = false;
 	bulletCount = 1;
 	bulletSpread = 2;
-	//model.LoadModel("Guns/blunger.md2");
-	//model.LoadTexture("Guns/blunger.png");
+	model.LoadModel("Guns/Pistolie.obj");
+	model.LoadTexture("Guns/blunger.png");
 	model.SetScale(3.5f);
 
-	//bullet.LoadModel("Guns/Bullets/smocke.obj");
-	//bullet.LoadTexture("Guns/Bullets/smocke.png");
-	bullet.SetScale(25.f);
+	bullet.LoadModel("Guns/Bullets/Tracer.obj");
+	bullet.LoadTexture("Guns/Bullets/yello.png");
+	bullet.SetScale(2.f);
 	gunOffset = CVector(0, 0, 0);
 }
 
@@ -318,13 +319,13 @@ Crossbow::Crossbow() {
 	held = false;
 	bulletCount = 1;
 	bulletSpread = 1;
-	//model.LoadModel("Guns/blunger.md2");
-	//model.LoadTexture("Guns/blunger.png");
+	model.LoadModel("Guns/crobbo.obj");
+	model.LoadTexture("Guns/blunger.png");
 	model.SetScale(3.5f);
 
-	//bullet.LoadModel("Guns/Bullets/smocke.obj");
-	//bullet.LoadTexture("Guns/Bullets/smocke.png");
-	bullet.SetScale(25.f);
+	bullet.LoadModel("Guns/Bullets/Arrow.obj");
+	bullet.LoadTexture("Guns/blunger.png");
+	bullet.SetScale(5.f);
 	gunOffset = CVector(0, 0, 0);
 }
 
@@ -386,7 +387,9 @@ void CMyGame::OnUpdate()
 	bullets->delete_if(deleted);
 	for (CModel* bullet : *bullets) {
 		//if (IsInRange(CVector(-6000, -20, -6000), CVector(6000, 1000, 6000), bullet->GetPositionV())) bullet->Delete();
-		for (CModel* wall : *walls) if(bullet->HitTest(wall)) bullet->Delete();
+		if (bullet->GetY() > 1000 || bullet->GetY() < -100) bullet->Delete();
+		else if (bullet->GetX() > 7000 || bullet->GetX() < -1000) bullet->Delete();
+		else for (CModel* wall : *walls) if(bullet->HitTest(wall)) bullet->Delete();
 		
 		bullet->Update(t); 
 	}
@@ -402,6 +405,11 @@ void CMyGame::OnUpdate()
 	rightGun->Update(t);
 
 	zombos->delete_if(deleted);
+	zomboBrainWave--;
+	if (zomboBrainWave <= 0) { 
+		ZomboControl(); 
+		zomboBrainWave = 30;
+	}
 	for (CModel* zombo : *zombos) {
 		for (CModel* bullet : *bullets){
 			if (bullet->HitTest(zombo)) {
@@ -412,6 +420,8 @@ void CMyGame::OnUpdate()
 				cout << "HITTTTTTTTTTTT" << endl;
 			}
 		}
+		if (zombo->IsAutoMoving()) zombo->PlayAnimation(40, 45, 7, true);
+		else zombo->PlayAnimation(1, 39, 7, true);
 		zombo->Update(t);
 	}
 }
@@ -477,18 +487,16 @@ void CMyGame::OnDraw(CGraphics* g)
 	// drawing the healthbar (which is a sprite object drawn in 2D)
 	CVector pos=WorldToScreenCoordinate(player.GetPositionV());
 	
-	for (auto zombar : zombars) delete zombar;
-	zombars.clear();
 
-	for (CModel* zombo : *zombos) {
+	/*for (CModel* zombo : *zombos) {
+
+		CVector pos = WorldToScreenCoordinate(zombo->GetPositionV() + CVector(0, 200, 0)); //THIS FUNCTION IS BROKEN AND SHOWS 2 COORDINATES
 		CHealthBar* zombar = new CHealthBar();
 		//zombar->SetHealth(zombo->GetHealth());
 		zombar->SetSize(zombo->GetHealth() * 2, 10);
-		CVector pos = WorldToScreenCoordinate(zombo->GetPositionV() + CVector(0, 200, 0));
 		zombar->SetPosition(pos.x, pos.y);
 		zombar->Draw(g);
-		zombars.push_back(zombar);
-	}
+	}*/
 
 	hbar.SetHealth(player.GetHealth());
 	hbar.SetSize(maxHealth * 2, 10);
@@ -530,24 +538,36 @@ void CMyGame::CameraControl(CGraphics* g)
 
 void CMyGame::ZomboControl()
 {
-	for (CModel* zombo : *zombos) {
-		if (zombo->IsAutoMoving()) zombo->PlayAnimation(40, 45, 7, true);
-		else zombo->PlayAnimation(1, 39, 7, true);
 
-		// select a new waypoint if stopped unless we reached the last waypoint
-		if (!zombo->IsAutoMoving() && zombo->GetStatus() < path.size())
-		{
-			// The status member variable is used to indicate which waypoint we aim for
-			CVector v = path[zombo->GetStatus()];
-			zombo->SetStatus(zombo->GetStatus() + 1);
-			zombo->MoveTo(v.x, v.z, 100);
+
+	for (CModel* zombo : *zombos) {
+		
+		ray.SetPositionV(zombo->GetPositionV(), player.GetPositionV());
+		CVector d = player.GetPositionV() - zombo->GetPositionV();
+		d.Normalize();
+
+		bool LOS = true;
+		for (CModel* wall : *walls) {
+			if (ray.HitTest(wall)) LOS = false;
 		}
-		// we reached the last way point, re-position at the first waypoint
-		if (!zombo->IsAutoMoving() && zombo->GetStatus() == path.size())
-		{
-			zombo->SetStatus(0);
-			zombo->SetPositionV(path[0]);
+
+		if (LOS) {
+			zombo->MoveTo(player.GetPositionV().x, player.GetPositionV().z, 500);
 		}
+		else {
+			if (!zombo->IsAutoMoving() && zombo->GetStatus() < 8)
+			{
+				CVector v = path[zombo->GetStatus()];
+				zombo->SetStatus(zombo->GetStatus() + 1);
+				zombo->MoveTo(v.x, v.z, 500);
+			}
+
+			if (!zombo->IsAutoMoving() && zombo->GetStatus() >= 8)
+			{
+				zombo->SetStatus(0);
+			}
+		}
+
 	}
 }
 
@@ -584,20 +604,6 @@ void CMyGame::LoadLevelData(string filename)
 					wallInstance->SetRotation(float(rot));
 					wallInstance->SetToFloor(0);
 					walls->push_back(wallInstance);
-					break;
-				}
-  			    case 2: // Coin -> Waypoints 
-				{
-					path.push_back(CVector((float)x, (float)y, (float)z));
-					break;
-				}
-				case 3: // Ogro -> Spawner
-				{
-					CModel* enemyInstance = zomboSpawner.Clone();
-					enemyInstance->SetPosition((float)x, (float)y, (float)z); enemyInstance->SetToFloor(0);
-					enemyInstance->SetRotation(float(rot)); enemyInstance->SetDirection((float)rot);
-					enemyInstance->SetSpeed(100);
-					zomboSpawners->push_back(enemyInstance);
 					break;
 				}
 
@@ -651,9 +657,21 @@ void CMyGame::OnStartGame()
 		 grasses->back()->SetPosition(rand() % 8000 - 3000, rand() % 8000 - 3000);
 	 }
 
+	 path[0] = CVector(-300, 0, -300);
+	 path[1] = CVector(-300, 0, 4000);
+	 path[2] = CVector(1700, 0, 4000);
+	 path[3] = CVector(1700, 0, 1700);
+	 path[4] = CVector(1700, 0, -300);
+	 path[5] = CVector(4000, 0, -300);
+	 path[6] = CVector(4000, 0, 4000);
+	 path[7] = CVector(-300, 0, 4000);
+
 	 auto p = zombo.Clone();
-	 p->SetPosition(player.GetX() + 50, player.GetZ());
+	 p->SetPositionV(path[0]);
+	 p->SetToFloor(0);
 	 zombos->push_back(p);
+
+	 
 }
 
 

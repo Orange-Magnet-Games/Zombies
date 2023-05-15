@@ -109,9 +109,9 @@ public:
 
 	// Models and Model Lists
 	CModelMd2 player;   // animated player model
-
+	int zomboBrainWave;
 	CModel wall;
-	CModel zombo;
+	CModelMd2 zombo;
 	CModel grass;
 	CModelList* grasses = new CModelList();
 	CModelList* zombos = new CModelList();
@@ -119,10 +119,11 @@ public:
 	CModel zomboSpawner;
 	CModel coin;
 	CModel box;
-	CModelList* zomboSpawners = new CModelList();;
-	CModelList* walls = new CModelList();;
-	vector<CVector> path;
-	
+	CModelList* zomboSpawners = new CModelList();
+	CModelList* walls = new CModelList();
+	CVector path[8] = {};
+	CLine ray;
+
 	float maxHealth = 100;
 
 	float sensitivity = 0.25;
@@ -131,7 +132,6 @@ public:
 	
 	// health indicator
 	CHealthBar hbar;
-	vector<CHealthBar*> zombars;
 	
 	// Font
 	CFont font;
