@@ -1,14 +1,15 @@
 ﻿#pragma once
 
 
+#include "GameApp.h"
 #include "Game.h"
 
 class Gun {
 public:
-	CModelMd2 model;
+	CModel model;
 	float fireTimer, fireRate, bulletSpeed;
-	bool automatic, held;
-	int bulletCount;
+	bool automatic, held, reloading = false;
+	int bulletCount, magSize, bulletsInChamber;
 	float bulletSpread;
 	CModel bullet;
 	CVector gunOffset;
@@ -89,7 +90,6 @@ public:
 	{}
 };
 
-
 class CMyGame : public CGame
 {
 private:
@@ -101,7 +101,7 @@ public:
 	// ----  Declare your game variables and objects here -------------
 	Camera camera = Camera();
 	// Variables
-	int score;
+	int money;
 	static CMyGame* Game() {
 		if (instance == nullptr) instance = new CMyGame();
 		return instance;
@@ -113,13 +113,12 @@ public:
 	CModel wall;
 	CModelMd2 zombo;
 	CModel grass;
+	CModel blood[5] = {};
 	CModelList* grasses = new CModelList();
 	CModelList* zombos = new CModelList();
 	CModelList* bullets = new CModelList();
-	CModel zomboSpawner;
-	CModel coin;
+	CModelList* particles = new CModelList();
 	CModel box;
-	CModelList* zomboSpawners = new CModelList();
 	CModelList* walls = new CModelList();
 	CVector path[8] = {};
 	CLine ray;

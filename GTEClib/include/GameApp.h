@@ -17,11 +17,18 @@ private:
 	Uint32 GameTime;			// Game Time since the game was started
 
 
+	static CGameApp* instance;
+
 public:
 	
 	// --- Constructor & Destructor ----------
 	CGameApp();
 	~CGameApp();
+
+	static CGameApp* App() {
+		if (instance == nullptr) instance = new CGameApp();
+		return instance;
+	}
 
 	// ----- Setter and Getter Functions -----
 	
