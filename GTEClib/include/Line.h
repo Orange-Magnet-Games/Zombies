@@ -144,7 +144,7 @@ virtual bool HitTest(CModel *pModel)
    }
    
    return false;
-   
+   // ACTUALLY FIX THIS
 }
   	
 

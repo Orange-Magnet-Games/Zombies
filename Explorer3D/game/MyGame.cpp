@@ -11,10 +11,23 @@ CMyGame::~CMyGame(void) {}
 void CMyGame::OnInitialize()
 {
 	srand(time(0));
+
+
+	wavePause = 15 * 60;
+	wavePauseCount = 0;
+	waveEnemies = 10;
+	waveEnemiesLeft = waveEnemies;
+	timeBetweenSpawnMax = 30;
+	timeBetweenSpawn = 0;
+	currentWave = 1;
+	waveStarted = true;
+
+	currentBoxGun = rand() % 4 + 1;
+
 	// ogro model
-	zombo.LoadModel("Enemies/Ogro.md2");
-	zombo.LoadTexture("Enemies/Ogro.bmp");
-	zombo.SetScale(5);
+	zombo.LoadModel("Enemies/foap.obj");
+	zombo.LoadTexture("Enemies/foap.png");
+	zombo.SetScale(20);
 	zombo.SetHealth(100);
 	zombo.SetToFloor(0);
 
@@ -23,6 +36,9 @@ void CMyGame::OnInitialize()
 	box.SetScale(5.0f);
 	box.SetToFloor(0);
 	box.SetPosition(1700, 1700);
+
+	Light.SetAmbientLight(0, 0, 0);
+	//Light.SetDiffuseLight(0, 0, 0);
 
 	// blood model
 	blood[0].LoadModel("Particles/meat 1.obj");
@@ -55,7 +71,7 @@ void CMyGame::OnInitialize()
 	
 	font.LoadDefault(); 
 	
-	CTexture::smooth=true;
+	CTexture::smooth=false;
 	
 	HideMouse();
 	SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -65,9 +81,9 @@ void CMyGame::OnInitialize()
 	// enable lighting
 	Light.Enable();
 
-	leftGun = new Crossbow(CVector(-5, -10, -15));
+	leftGun = new Pistol(CVector(-5, -10, -15));
 
-	rightGun = new Rifle(CVector(-5, -10, 15));
+	//rightGun = new Rifle(CVector(-5, -10, 15));
 
 
 	// load abarlith model
@@ -206,7 +222,7 @@ vector<CModel*> BlunderBuss::Shoot() {
 		float y = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
 		float z = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
 		bruh += CVector(x, y, z);
-		cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
+		//cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
 		bullet->SetDirectionV(bruh);
 		bullet->SetSpeed(bulletSpeed);
 		bullet->SetOmega(x * 500, y * 500, z * 500);
@@ -263,7 +279,7 @@ vector<CModel*> Rifle::Shoot() {
 		float y = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
 		float z = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
 		bruh += CVector(x, y, z);
-		cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
+		//cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
 		bullet->SetDirectionV(bruh);
 		bullet->SetRotationV(bruh);
 		bullet->SetSpeed(bulletSpeed);
@@ -320,7 +336,7 @@ vector<CModel*> Pistol::Shoot() {
 		float y = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
 		float z = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
 		bruh += CVector(x, y, z);
-		cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
+		//cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
 		bullet->SetDirectionV(bruh);
 		bullet->SetRotationV(bruh);
 		bullet->SetSpeed(bulletSpeed);
@@ -377,7 +393,7 @@ vector<CModel*> Crossbow::Shoot() {
 		float y = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2) + DEG2RAD(5);
 		float z = DEG2RAD(rand() % (int)bulletSpread - bulletSpread / 2);
 		bruh += CVector(x, y, z);
-		cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
+		//cout << bruh.x << " " << bruh.y << " " << bruh.z << endl;
 		bullet->SetDirectionV(bruh);
 		bullet->SetRotationV(bruh);
 		bullet->SetSpeed(bulletSpeed);
@@ -397,14 +413,19 @@ bool CMyGame::IsInRange(CVector min, CVector max, CVector orig) {
 }
 void CMyGame::OnUpdate() 
 {
+	if (IsKeyDown(SDLK_LALT) && IsKeyDown(SDLK_F4)) ExitGame();
+
 	if (IsMenuMode() || IsGameOver()) return;
 	
+
+	SpawnControl();
+
 	long t =  GetTime();
 	
-
-	if (IsKeyDown(SDLK_LALT) && IsKeyDown(SDLK_F4)) ExitGame();
 	
 	PlayerControl(t);
+
+	GunControl(t);
 
 	for (CModel* i : *walls) i->Update(t);
 	for (CModel* i : *grasses) {
@@ -413,60 +434,7 @@ void CMyGame::OnUpdate()
 		i->Update(t);
 	}
 	
-	bullets->delete_if(deleted);
-	for (CModel* bullet : *bullets) {
-		//if (IsInRange(CVector(-6000, -20, -6000), CVector(6000, 1000, 6000), bullet->GetPositionV())) bullet->Delete();
-		if (bullet->GetY() > 1000 || bullet->GetY() < -100) bullet->Delete();
-		else if (bullet->GetX() > 7000 || bullet->GetX() < -1000) bullet->Delete();
-		else for (CModel* wall : *walls) if(bullet->HitTest(wall)) bullet->Delete();
-		if (bullet->GetStatus() == 2) bullet->SetYVelocity(bullet->GetYVelocity() - 20); 
-		bullet->Update(t); 
-	}
-
-	if(leftGun->fireTimer > 0) leftGun->fireTimer--;
-	else if (leftGun->reloading) {
-		leftGun->bulletsInChamber = leftGun->magSize;
-		leftGun->reloading = false;
-	}
-	else if (leftGun->automatic && leftGun->held) {
-		leftGun->fireTimer = leftGun->fireRate;
-		for (CModel* bullet : leftGun->Shoot()) {
-			bullets->push_back(bullet);
-		}
-		if (leftGun->magSize > 1) {
-			leftGun->bulletsInChamber--;
-			if (leftGun->bulletsInChamber <= 0) {
-				if (leftGun->automatic) leftGun->fireTimer = leftGun->fireRate * 10;
-				else leftGun->fireTimer = leftGun->fireRate * 5;
-				leftGun->reloading = true;
-			}
-		}
-	}
-	if (rightGun->fireTimer > 0) rightGun->fireTimer--;
-	else if (rightGun->reloading) {
-		rightGun->bulletsInChamber = rightGun->magSize;
-		rightGun->reloading = false;
-	}
-	else if (rightGun->automatic && rightGun->held) {
-		rightGun->fireTimer = rightGun->fireRate;
-		for (CModel* bullet : rightGun->Shoot()) {
-			bullets->push_back(bullet);
-		}
-		if (rightGun->magSize > 1) {
-			rightGun->bulletsInChamber--;
-			if (rightGun->bulletsInChamber <= 0) {
-				if (rightGun->automatic) rightGun->fireTimer = rightGun->fireRate * 10;
-				else rightGun->fireTimer = rightGun->fireRate * 5;
-				rightGun->reloading = true;
-			}
-		}
-	}
-	if (leftGun->automatic && leftGun->fireTimer <= 0) leftGun->Shoot();
-	if (rightGun->automatic && rightGun->fireTimer <= 0) rightGun->Shoot();
-
-
-	leftGun->Update(t);
-	rightGun->Update(t);
+	
 
 	zombos->delete_if(deleted);
 	zomboBrainWave--;
@@ -474,32 +442,38 @@ void CMyGame::OnUpdate()
 		ZomboControl(); 
 		zomboBrainWave = 30;
 	}
+	invincibility--;
+	if (invincibility <= -120) player.SetHealth(player.GetHealth() + 1);
 	for (CModel* zombo : *zombos) {
+		if (invincibility <= 0) {
+			if (zombo->HitTest(&player)) {
+				player.SetHealth(player.GetHealth() - 25);
+				invincibility = 30;
+			}
+		}
 		for (CModel* bullet : *bullets){
 			if (bullet->HitTest(zombo)) {
 				zombo->SetHealth(zombo->GetHealth() - bullet->GetHealth());
-				if (zombo->GetHealth() <= 0) { 
-					for (int i = 0; i < 20; i++) {
-						auto p = blood[rand() % 5].Clone();
-						p->SetPositionV(zombo->GetPositionV());
-						CVector pVel = CVector(0, 1, 0) * 1000;
-						float x = DEG2RAD(rand() % 60 - 30);
-						float y = DEG2RAD(rand() % 60 - 30);
-						float z = DEG2RAD(rand() % 60 - 30);
-						pVel = RotateDirection(pVel, x, y, z);
-						p->SetVelocityV(pVel);
-						p->SetOmegaV(CVector(x, y, z) * 1000);
-						p->SetColor(CColor(rand() % 204 + 50, 0, 0));
-						particles->push_back(p);
-					}
-					zombo->Delete(); 
-					
-				}
 				bullet->Delete();
-
-				
-				
 			}
+		}
+		if (zombo->GetHealth() <= 0) {
+			for (int i = 0; i < 20; i++) {
+				auto p = blood[rand() % 5].Clone();
+				p->SetPositionV(zombo->GetPositionV());
+				CVector pVel = CVector(0, 1, 0) * 1000;
+				float x = DEG2RAD(rand() % 60 - 30);
+				float y = DEG2RAD(rand() % 60 - 30);
+				float z = DEG2RAD(rand() % 60 - 30);
+				pVel = RotateDirection(pVel, x, y, z);
+				p->SetVelocityV(pVel);
+				p->SetOmegaV(CVector(x, y, z) * 1000);
+				p->SetColor(CColor(rand() % 204 + 50, 0, 0));
+				particles->push_back(p);
+			}
+			money++;
+			zombo->Delete();
+
 		}
 		if (zombo->IsAutoMoving()) zombo->PlayAnimation(40, 45, 7, true);
 		else zombo->PlayAnimation(1, 39, 7, true);
@@ -513,6 +487,70 @@ void CMyGame::OnUpdate()
 	}
 	particles->delete_if(deleted);
 }
+
+void CMyGame::GunControl(long t) {
+
+
+	bullets->delete_if(deleted);
+	for (CModel* bullet : *bullets) {
+		//if (IsInRange(CVector(-6000, -20, -6000), CVector(6000, 1000, 6000), bullet->GetPositionV())) bullet->Delete();
+		if (bullet->GetY() > 1000 || bullet->GetY() < -100) bullet->Delete();
+		else if (bullet->GetX() > 7000 || bullet->GetX() < -1000) bullet->Delete();
+		else for (CModel* wall : *walls) if (bullet->HitTest(wall)) bullet->Delete();
+		if (bullet->GetStatus() == 2) bullet->SetYVelocity(bullet->GetYVelocity() - 10);
+		bullet->Update(t);
+	}
+	if (leftGun != nullptr) {
+		if (leftGun->fireTimer > 0) leftGun->fireTimer--;
+		else if (leftGun->reloading) {
+			leftGun->bulletsInChamber = leftGun->magSize;
+			leftGun->reloading = false;
+		}
+		else if (leftGun->automatic && leftGun->held) {
+			leftGun->fireTimer = leftGun->fireRate;
+			for (CModel* bullet : leftGun->Shoot()) {
+				bullets->push_back(bullet);
+			}
+			if (leftGun->magSize > 1) {
+				leftGun->bulletsInChamber--;
+				if (leftGun->bulletsInChamber <= 0) {
+					if (leftGun->automatic) leftGun->fireTimer = leftGun->fireRate * 10;
+					else leftGun->fireTimer = leftGun->fireRate * 5;
+					leftGun->reloading = true;
+				}
+			}
+		}
+		if (leftGun->automatic && leftGun->fireTimer <= 0) leftGun->Shoot();
+		leftGun->Update(t);
+	}
+	if (rightGun != nullptr) {
+		if (rightGun->fireTimer > 0) rightGun->fireTimer--;
+		else if (rightGun->reloading) {
+			rightGun->bulletsInChamber = rightGun->magSize;
+			rightGun->reloading = false;
+		}
+		else if (rightGun->automatic && rightGun->held) {
+			rightGun->fireTimer = rightGun->fireRate;
+			for (CModel* bullet : rightGun->Shoot()) {
+				bullets->push_back(bullet);
+			}
+			if (rightGun->magSize > 1) {
+				rightGun->bulletsInChamber--;
+				if (rightGun->bulletsInChamber <= 0) {
+					if (rightGun->automatic) rightGun->fireTimer = rightGun->fireRate * 10;
+					else rightGun->fireTimer = rightGun->fireRate * 5;
+					rightGun->reloading = true;
+				}
+			}
+		}
+		if (rightGun->automatic && rightGun->fireTimer <= 0) rightGun->Shoot();
+		rightGun->Update(t);
+	}
+
+
+	
+}
+
 void CMyGame::PlayerControl(long t)
 {
 	CVector dir = CVector(0, 0, 0);
@@ -569,7 +607,7 @@ void CMyGame::OnDraw(CGraphics* g)
 
 	// draw GTEC 3D text
 	// draw score
-	font.SetColor(CColor::Red()); font.DrawNumber(10, Height - 50, money);
+	font.SetColor(CColor::Red()); font.DrawNumber(10, Height - 100, money);
 
 	// drawing the healthbar (which is a sprite object drawn in 2D)
 	CVector pos = WorldToScreenCoordinate(player.GetPositionV());
@@ -590,16 +628,38 @@ void CMyGame::OnDraw(CGraphics* g)
 	hbar.SetPosition(maxHealth + 10, 690);
 	hbar.Draw(g);
 
-	if (leftGun->reloading) { font.SetSize(30); font.SetColor(CColor::White()); font.DrawText(50, 20, "Reloading!"); }
-	if (rightGun->reloading) { font.SetSize(30); font.SetColor(CColor::White()); font.DrawText(750, 20, "Reloading!"); }
+	if (leftGun != nullptr) if (leftGun->reloading) { font.SetSize(30); font.SetColor(CColor::White()); font.DrawText(50, 20, "Reloading!"); }
+	if (rightGun != nullptr) if (rightGun->reloading) { font.SetSize(30); font.SetColor(CColor::White()); font.DrawText(750, 20, "Reloading!"); }
 
-	
-	string lmao = to_string(leftGun->bulletsInChamber) + "\\" + to_string(leftGun->magSize);
-	font.SetSize(64); if (leftGun->reloading) font.SetColor(CColor::Red()); else font.SetColor(CColor::White()); font.DrawText(25, 50, lmao);
-	lmao = to_string(rightGun->bulletsInChamber) + "\\" + to_string(rightGun->magSize);
-	font.SetSize(64); if (rightGun->reloading) font.SetColor(CColor::Red()); else font.SetColor(CColor::White()); font.DrawText(725, 50, lmao);
-
-	
+	string lmao;
+	if (leftGun != nullptr) {
+		lmao = to_string(leftGun->bulletsInChamber) + "\\" + to_string(leftGun->magSize);
+		font.SetSize(64); if (leftGun->reloading) font.SetColor(CColor::Red()); else font.SetColor(CColor::White()); font.DrawText(25, 50, lmao);
+	}
+	if (rightGun != nullptr) {
+		lmao = to_string(rightGun->bulletsInChamber) + "\\" + to_string(rightGun->magSize);
+		font.SetSize(64); if (rightGun->reloading) font.SetColor(CColor::Red()); else font.SetColor(CColor::White()); font.DrawText(725, 50, lmao);
+	}
+	if (inProgress) {
+		font.SetSize(64); font.SetColor(CColor::Red()); font.DrawText(10, Height - 200, "WAVE " + to_string(currentWave));
+	}
+	else {
+		font.SetSize(64); font.SetColor(CColor::Red()); font.DrawText(10, Height - 200, "NEXT WAVE IN " + to_string((int)(wavePauseCount/60)) + " SECONDS");
+	}
+	if (player.GetPositionV().Distance(box.GetPositionV()) < 500) {
+		switch (currentBoxGun) {
+			case 1: lmao = "Pistol"; break;
+			case 2: lmao = "Rifle"; break;
+			case 3: lmao = "Crossbow"; break;
+			case 4: lmao = "Blunderbuss"; break;
+		}
+		font.SetSize(32); font.SetColor(CColor::Red()); font.DrawText(0, 300, "CURRENT GUN: " + lmao); 
+		font.DrawText(0, 250, "Price: 15");
+		font.DrawText(0, 200, "Press Q or E to Buy");
+	}
+	if (IsGameOver()) {
+		font.SetSize(128); font.SetColor(CColor::Red()); font.DrawText(100, 300, "GAME OVER");
+	}
 	
 }
 
@@ -628,19 +688,55 @@ void CMyGame::CameraControl(CGraphics* g)
 	Light.Apply();
 }
 
+void CMyGame::SpawnControl() {
+	if (waveStarted) {
+		if (timeBetweenSpawn > 0) timeBetweenSpawn--;
+		else {
+			if (waveEnemiesLeft > 0) {
+				//SPAWN ENEMY
+				inProgress = true;
+				int i = rand() % 8;
+				CModel* p = zombo.Clone();
+				p->SetStatus(i);
+				p->SetPositionV(path[i]);
+				p->SetToFloor(0);
+				zombos->push_back(p);
+
+				timeBetweenSpawn = timeBetweenSpawnMax;
+				waveEnemiesLeft--;
+			}
+			else if (zombos->size() <= 0) {
+				waveStarted = false;
+
+				inProgress = false;
+				wavePauseCount = wavePause;
+			}
+		}
+	}
+	else if (wavePauseCount > 0) wavePauseCount--;
+	else {
+		cout << "WAVE STARTED" << endl;
+		waveStarted = true;
+		waveEnemies *= 1.3;
+		waveEnemiesLeft = waveEnemies;
+		currentWave++;
+	}
+}
+
 void CMyGame::ZomboControl()
 {
 
 
 	for (CModel* zombo : *zombos) {
-		
+
+		/*CLine ray;
 		ray.SetPositionV(zombo->GetPositionV(), player.GetPositionV());
 		CVector d = player.GetPositionV() - zombo->GetPositionV();
-		d.Normalize();
-
 		bool LOS = true;
-		for (CModel* wall : *walls) {
-			if (ray.HitTest(wall)) LOS = false;
+		if (d.Dot(zombo->GetDirectionV()) > 0) {
+			for (CModel* wall : *walls) {
+				if (ray.HitTest(wall)) { LOS = false; break; } //WHY IS LINE HITTESTING SO SLOWWWWW
+			}
 		}
 
 		if (LOS) {
@@ -659,7 +755,9 @@ void CMyGame::ZomboControl()
 				zombo->SetStatus(0);
 			}
 		}
-
+		*/
+		// I HAD TO COMMENT ALL OF THIS OUT BECAUSE OF HOW FUCKING SLOW THIS ENGINE IS I HOPE YOU KNOW THAT
+		zombo->MoveTo(player.GetPositionV().x, player.GetPositionV().z, 500);
 	}
 }
 
@@ -718,8 +816,8 @@ void CMyGame::OnRender3D(CGraphics* g)
 	box.Draw(g);
 	
 	//player.Draw(g);
-	leftGun->Draw(g);
-	rightGun->Draw(g);
+	if (leftGun != nullptr) leftGun->Draw(g);
+	if (rightGun != nullptr) rightGun->Draw(g);
 
 	for (CModel* i : *walls) i->Draw(g);
 	for (CModel* i : *grasses) i->Draw(g);
@@ -759,13 +857,6 @@ void CMyGame::OnStartGame()
 	 path[5] = CVector(4000, 0, -300);
 	 path[6] = CVector(4000, 0, 4000);
 	 path[7] = CVector(-300, 0, 4000);
-
-	 auto p = zombo.Clone();
-	 p->SetPositionV(path[0]);
-	 p->SetToFloor(0);
-	 zombos->push_back(p);
-
-	 
 }
 
 
@@ -784,7 +875,27 @@ void CMyGame::OnTerminate()
 
 void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
 {
-	
+	if (sym == SDLK_e && player.GetPositionV().Distance(box.GetPositionV()) < 500 && money >= 15) {
+		switch (currentBoxGun) {
+			case 1: rightGun = new Pistol(rightOffset); break;
+			case 2: rightGun = new Rifle(rightOffset); break;
+			case 3: rightGun = new Crossbow(rightOffset); break;
+			case 4: rightGun = new BlunderBuss(rightOffset); break;
+		}
+		money -= 15;
+		currentBoxGun = rand() % 4 + 1;
+	}
+
+	if (sym == SDLK_q && player.GetPositionV().Distance(box.GetPositionV()) < 500 && money >= 15) {
+		switch (currentBoxGun) {
+			case 1: leftGun = new Pistol(leftOffset); break;
+			case 2: leftGun = new Rifle(leftOffset); break;
+			case 3: leftGun = new Crossbow(leftOffset); break;
+			case 4: leftGun = new BlunderBuss(leftOffset); break;
+		}
+		money -= 15;
+		currentBoxGun = rand() % 4 + 1;
+	}
 	if (sym == SDLK_F2) NewGame();
   
 }
@@ -805,62 +916,66 @@ void CMyGame::OnMouseMove(Uint16 x,Uint16 y,Sint16 relx,Sint16 rely,bool bLeft,b
 }
 
 void CMyGame::OnLButtonDown(Uint16 x,Uint16 y)
-{   
-	if (!leftGun->automatic) {
-		if (leftGun->fireTimer <= 0) {
+{
+	if (leftGun != nullptr) {
+		if (!leftGun->automatic) {
+			if (leftGun->fireTimer <= 0) {
 
-			if (!leftGun->held) {
-				leftGun->fireTimer = leftGun->fireRate;
-				for (CModel* bullet : leftGun->Shoot()) {
-					bullets->push_back(bullet);
+				if (!leftGun->held) {
+					leftGun->fireTimer = leftGun->fireRate;
+					for (CModel* bullet : leftGun->Shoot()) {
+						bullets->push_back(bullet);
+					}
 				}
-			}
-			leftGun->held = true;
-			if (leftGun->magSize > 1) {
-				leftGun->bulletsInChamber--;
-				if (leftGun->bulletsInChamber <= 0) {
-					if (leftGun->automatic) leftGun->fireTimer = leftGun->fireRate * 10;
-					else leftGun->fireTimer = leftGun->fireRate * 5;
-					leftGun->reloading = true;
+				leftGun->held = true;
+				if (leftGun->magSize > 1) {
+					leftGun->bulletsInChamber--;
+					if (leftGun->bulletsInChamber <= 0) {
+						if (leftGun->automatic) leftGun->fireTimer = leftGun->fireRate * 10;
+						else leftGun->fireTimer = leftGun->fireRate * 5;
+						leftGun->reloading = true;
+					}
 				}
 			}
 		}
+		else leftGun->held = true;
 	}
-	else leftGun->held = true;
 }
 
 void CMyGame::OnLButtonUp(Uint16 x,Uint16 y)
 {
-	leftGun->held = false;
+	if (leftGun != nullptr) leftGun->held = false;
 }
 
 void CMyGame::OnRButtonDown(Uint16 x,Uint16 y)
 {
-	if (!rightGun->automatic) {
-		if (rightGun->fireTimer <= 0) {
-			if (!rightGun->held && !rightGun->automatic) {
-				rightGun->fireTimer = rightGun->fireRate;
-				for (CModel* bullet : rightGun->Shoot()) {
-					bullets->push_back(bullet);
+	if (rightGun != nullptr) {
+		if (!rightGun->automatic) {
+			if (rightGun->fireTimer <= 0) {
+				if (!rightGun->held && !rightGun->automatic) {
+					rightGun->fireTimer = rightGun->fireRate;
+					for (CModel* bullet : rightGun->Shoot()) {
+						bullets->push_back(bullet);
+					}
 				}
-			}
-			rightGun->held = true;
-			if (rightGun->magSize > 1) {
-				rightGun->bulletsInChamber--;
-				if (rightGun->bulletsInChamber <= 0) {
-					if (rightGun->automatic) rightGun->fireTimer = rightGun->fireRate * 10;
-					else rightGun->fireTimer = rightGun->fireRate * 5;
-					rightGun->reloading = true;
+				rightGun->held = true;
+				if (rightGun->magSize > 1) {
+					rightGun->bulletsInChamber--;
+					if (rightGun->bulletsInChamber <= 0) {
+						if (rightGun->automatic) rightGun->fireTimer = rightGun->fireRate * 10;
+						else rightGun->fireTimer = rightGun->fireRate * 5;
+						rightGun->reloading = true;
+					}
 				}
 			}
 		}
+		else rightGun->held = true;
 	}
-	else rightGun->held = true;
 }
 
 void CMyGame::OnRButtonUp(Uint16 x,Uint16 y)
 {
-	rightGun->held = false;
+	if (rightGun != nullptr) rightGun->held = false;
 }
 
 void CMyGame::OnMButtonDown(Uint16 x,Uint16 y)

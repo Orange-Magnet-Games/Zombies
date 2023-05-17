@@ -100,18 +100,28 @@ public:
 
 	// ----  Declare your game variables and objects here -------------
 	Camera camera = Camera();
+
+	int wavePause, wavePauseCount,
+		waveEnemies, waveEnemiesLeft, 
+		timeBetweenSpawnMax, timeBetweenSpawn,
+		currentWave;
+	bool waveStarted, inProgress;
+
+	//INCREASE ENEMIES BY 1.3 EACH WAVE
+
 	// Variables
 	int money;
 	static CMyGame* Game() {
 		if (instance == nullptr) instance = new CMyGame();
 		return instance;
 	}
+	int invincibility = 30;
 
 	// Models and Model Lists
 	CModelMd2 player;   // animated player model
 	int zomboBrainWave;
 	CModel wall;
-	CModelMd2 zombo;
+	CModel zombo;
 	CModel grass;
 	CModel blood[5] = {};
 	CModelList* grasses = new CModelList();
@@ -121,7 +131,10 @@ public:
 	CModel box;
 	CModelList* walls = new CModelList();
 	CVector path[8] = {};
-	CLine ray;
+
+	int currentBoxGun;
+	CVector leftOffset = CVector(-5, -10, -15), 
+		rightOffset = CVector(-5, -10, 15);
 
 	float maxHealth = 100;
 
@@ -147,8 +160,7 @@ public:
 
 	
 
-	vector<Gun*> guns;
-	Gun* leftGun, * rightGun;
+	Gun* leftGun = nullptr, *rightGun = nullptr;
 	// Esssential Functions
    
 	bool IsInRange(CVector min, CVector max, CVector orig);
@@ -158,6 +170,10 @@ public:
 	void PlayerControl(long t);
 
 	void ZomboControl();
+
+	void GunControl(long t);
+
+	void SpawnControl();
    
 	void CameraControl(CGraphics* g);
 
